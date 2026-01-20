@@ -1,0 +1,167 @@
+#ifndef HEAP_H
+#define HEAP_H
+
+//complete binary tree , from left to right 
+
+#include <iostream>
+using namespace std;
+
+template <typename T>
+class Heap {
+private:
+    T* arr;
+    int size;
+    int capacity;
+
+    void heapifyUp(int index);
+    void heapifyDown(int index);
+
+public:
+    Heap(int cap = 100);
+    ~Heap();
+
+    void insert(const T& value);
+    T extractMax();
+    bool isEmpty() const;
+    bool isFull() const ;
+
+    // Add this to the 'public' section of your Heap class
+Heap(const Heap& other) {
+    capacity = other.capacity;
+    size = other.size;
+    arr = new T[capacity];
+    for (int i = 0; i < size; i++) {
+        arr[i] = other.arr[i];
+    }
+}
+
+// And an assignment operator to be safe
+Heap& operator=(const Heap& other) {
+    if (this != &other) {
+        delete[] arr;
+        capacity = other.capacity;
+        size = other.size;
+        arr = new T[capacity];
+        for (int i = 0; i < size; i++) {
+            arr[i] = other.arr[i];
+        }
+    }
+    return *this;
+}
+
+void displayDispatchHeap() const;
+void clear();
+
+};
+
+ template <typename T>
+void Heap<T>::clear()
+{
+    size = 0;
+}
+
+
+
+template <typename T>
+Heap<T>::Heap(int cap) {
+    capacity = cap;
+    size = 0;
+    arr = new T[capacity];
+}
+
+template <typename T>
+Heap<T>::~Heap() {
+    if (arr) {  // Added: Null check to prevent segfault
+        delete[] arr;
+        arr = nullptr;  // Optional: Prevent double deletion
+    }
+}
+
+template <typename T>
+bool Heap<T>::isEmpty() const {
+    return size == 0;
+}
+       template <typename T>
+        bool Heap<T>::isFull() const {
+         return size >= capacity;
+    }
+
+template <typename T>
+void Heap<T>::heapifyUp(int i) {
+    while (i > 0 && arr[(i - 1) / 2] < arr[i]) {
+        swap(arr[i], arr[(i - 1) / 2]);
+        i = (i - 1) / 2;
+    }
+}
+
+template <typename T>
+void Heap<T>::heapifyDown(int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < size && arr[left] > arr[largest])
+        largest = left;
+    if (right < size && arr[right] > arr[largest])
+        largest = right;
+
+    if (largest != i) {
+        swap(arr[i], arr[largest]);
+        heapifyDown(largest);
+    }
+}
+
+template <typename T>
+void Heap<T>::insert(const T& value) { // Added Heap<T>:: and const reference
+    if (size >= capacity) {
+        cout << "Heap full!" << endl;
+        return;
+    }
+
+    arr[size] = value; 
+    int current = size;
+    size++;
+
+    // Use your existing heapifyUp or the manual bubble-up logic:
+    while (current > 0) {
+        int parent = (current - 1) / 2;
+        if (arr[current] > arr[parent]) { 
+            swap(arr[current], arr[parent]);
+            current = parent;
+        } else {
+            break;
+        }
+    }
+}
+
+
+template <typename T>
+T Heap<T>::extractMax() {
+    if (isEmpty())
+        throw runtime_error("Heap Empty");
+
+    T root = arr[0];
+    arr[0] = arr[--size];
+    heapifyDown(0);
+    return root;
+}
+
+
+template <typename T>
+void Heap<T>::displayDispatchHeap() const {
+
+
+    if (size == 0) {
+        cout << " [No parcels ready for dispatch]\n";
+        return;
+    }
+
+    for (int i = 0; i < size; i++) {
+        cout << " ID:" << arr[i].parcelID
+             << " | Priority:" << arr[i].priority
+             << " | To:" << arr[i].destination
+             << endl;
+    }
+}
+
+#endif
