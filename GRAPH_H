@@ -1,0 +1,103 @@
+#ifndef GRAPH_H
+#define GRAPH_H
+
+#include <climits>
+#include <iostream>
+#include <vector>
+#include "colors.h"
+
+using namespace std;
+
+class Graph {
+private:
+    int adj[20][20];
+    int vertices;
+
+public:
+    Graph(int v);
+    void addEdge(int u, int v, int w);
+    void removeEdge(int u, int v); // New: For blocking routes
+    int dijkstra(int src, int dest); // Updated: Specific destination and path reconstruction
+    void printPath(int parent[], int j); // New: Helper to display the route
+};
+
+Graph::Graph(int v) {
+    vertices = (v > 20) ? 20 : v; // Safety cap for the static array size
+    for (int i = 0; i < 20; i++)
+        for (int j = 0; j < 20; j++)
+            adj[i][j] = 0;
+}
+
+void Graph::addEdge(int u, int v, int w) {
+    if (u >= 0 && u < vertices && v >= 0 && v < vertices) {
+        adj[u][v] = w; 
+        adj[v][u] = w; // <--- ADD THIS BACK
+    }
+}
+
+// Requirement: Handling blocked/overloaded paths
+void Graph::removeEdge(int u, int v) {
+    if (u >= 0 && u < vertices && v >= 0 && v < vertices) {
+        adj[u][v] = 0; 
+        adj[v][u] = 0;
+    }
+}
+
+// Helper to print the route from parent array
+void Graph::printPath(int parent[], int j) {
+    if (parent[j] == -1) {
+        cout << j;
+        return;
+    }
+    printPath(parent, parent[j]);
+    cout << " -> " << j;
+}
+
+// Requirement: Compute Shortest Delivery Route with visual path
+// Inside graph.h - Update the signature in the class and implementation
+int Graph::dijkstra(int src, int dest) {
+    if (src < 0 || src >= vertices || dest < 0 || dest >= vertices) {
+        return INT_MAX; 
+    }
+
+    int dist[20];
+    bool visited[20] = {false};
+    int parent[20];
+
+    for (int i = 0; i < vertices; i++) {
+        dist[i] = INT_MAX;
+        parent[i] = -1;
+    }
+
+    dist[src] = 0;
+
+    for (int count = 0; count < vertices - 1; count++) {
+        int u = -1;
+        for (int i = 0; i < vertices; i++)
+            if (!visited[i] && (u == -1 || dist[i] < dist[u]))
+                u = i;
+
+        if (u == -1 || dist[u] == INT_MAX) break;
+
+        visited[u] = true;
+
+        for (int v = 0; v < vertices; v++) {
+            if (adj[u][v] && !visited[v] && dist[u] != INT_MAX
+                && dist[u] + adj[u][v] < dist[v]) {
+                dist[v] = dist[u] + adj[u][v];
+                parent[v] = u;
+            }
+        }
+    }
+
+    if (dist[dest] == INT_MAX) {
+        cout << Red << "No path exists." << Reset << endl;
+        return INT_MAX; // Return infinity if unreachable
+    } else {
+        printPath(parent, dest);
+        cout << " [Dist: " << dist[dest] << "]" << endl;
+        return dist[dest]; // Return the actual distance
+    }
+}
+
+#endif
